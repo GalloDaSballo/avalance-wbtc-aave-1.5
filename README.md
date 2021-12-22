@@ -1,6 +1,19 @@
 
 # Badger Strategy V1.5 Brownie Mix
 
+## NOTE: TO TEST
+Import the fork network with tons of AVAX
+```
+brownie networks import network-config.yaml
+```
+
+The strategy deposits wBTC on AAVE
+It uses the Deposit to earn yield (automatic auto-compounding)
+It uses the rewards to earn additional yield (manually auto-compounded (sold for more))
+It emits 50% of the rewards to the tree
+
+NOTE: Because AAVE auto-compounds it's deposits, we won't take perf-fee on harvesting wBTC
+
 # WORK IN PROGRESS - USE AT YOUR OWN RISK - NOT AUDITED!!!!!!
 
 - Video Introduction: TODO
