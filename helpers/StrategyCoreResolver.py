@@ -1,7 +1,7 @@
 from brownie import *
 from decimal import Decimal
 from helpers.shares_math import get_withdrawal_fees_in_shares, from_shares_to_want, get_report_fees
-
+import math
 from helpers.utils import (
     approx,
 )
@@ -269,17 +269,6 @@ class StrategyCoreResolver:
                     1,
                 )
 
-        # The total want between the strategy and sett should be less after than before
-        # if there was previous want in strategy or sett (sometimes we withdraw entire
-        # balance from the strategy pool) which we check above.
-        if (
-            before.balances("want", "strategy") > 0
-            or before.balances("want", "sett") > 0
-        ):
-            assert after.balances("want", "strategy") + after.balances(
-                "want", "sett"
-            ) < before.balances("want", "strategy") + before.balances("want", "sett")
-
         self.hook_after_confirm_withdraw(before, after, params)
 
     def confirm_deposit(self, before, after, params):
@@ -378,14 +367,14 @@ class StrategyCoreResolver:
 
         # # Strategist should earn if fee is enabled and value was generated
         if before.get("sett.performanceFeeStrategist") > 0 and valueGained:
-            assert after.balances("want", "strategist") > before.balances(
-                "want", "strategist"
+            assert after.balances("sett", "strategist") > before.balances(
+                "sett", "strategist"
             )
 
         # # Strategist should earn if fee is enabled and value was generated
         if before.get("sett.performanceFeeGovernance") > 0 and valueGained:
-            assert after.balances("want", "treasury") > before.balances(
-                "want", "treasury"
+            assert after.balances("sett", "treasury") > before.balances(
+                "sett", "treasury"
             )
         
 
@@ -420,9 +409,13 @@ class StrategyCoreResolver:
 
         delta_treasury = after.balances("sett", "treasury") - before.balances(
                 "sett", "treasury"
-            )
+        )
 
-        assert delta_treasury == shares_perf_treasury + shares_management
+        assert approx(
+            delta_treasury, 
+            math.floor(shares_perf_treasury + shares_management),
+            1,
+        )
 
     def confirm_tend(self, before, after, tx):
         """

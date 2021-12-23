@@ -88,14 +88,24 @@ contract MyStrategy is BaseStrategy {
 
     /// @dev Withdraw all funds, this is used for migrations, most of the time for emergency reasons
     function _withdrawAll() internal override {
+        uint256 toWithdraw = IERC20Upgradeable(aToken).balanceOf(address(this)); // Cache to save gas on worst case
+        if(toWithdraw == 0){
+            // AAVE reverts if trying to withdraw 0
+            return;
+        }
+
         // Withdraw everything!!
         LENDING_POOL.withdraw(want, type(uint256).max, address(this));
     }
 
     /// @dev Withdraw `_amount` of want, so that it can be sent to the vault / depositor
     /// @notice just unlock the funds and return the amount you could unlock
-    /// @notice STRAT: if _amount is greater than deposited, this can revert.
     function _withdrawSome(uint256 _amount) internal override returns (uint256) {
+        uint256 maxAmount = IERC20Upgradeable(aToken).balanceOf(address(this)); // Cache to save gas on worst case
+        if(_amount > maxAmount){
+            _amount = maxAmount; // saves gas here
+        }
+
         uint256 balBefore = balanceOfWant();
         LENDING_POOL.withdraw(want, _amount, address(this));
         uint256 balAfter = balanceOfWant();
@@ -111,9 +121,8 @@ contract MyStrategy is BaseStrategy {
     }
 
     function _harvest() internal override returns (TokenAmount[] memory harvested) {
-        address[] memory tokens = new address[](2);
-        tokens[0] = want;
-        tokens[1] = aToken;
+        address[] memory tokens = new address[](1);
+        tokens[0] = aToken;
         
         // Claim all rewards
         REWARDS_CONTRACT.claimRewards(tokens, type(uint256).max, address(this));
@@ -169,9 +178,8 @@ contract MyStrategy is BaseStrategy {
     /// @dev Return the balance of rewards that the strategy has accrued
     /// @notice Used for offChain APY and Harvest Health monitoring
     function balanceOfRewards() external view override returns (TokenAmount[] memory rewards) {
-        address[] memory tokens = new address[](2);
-        tokens[0] = want;
-        tokens[1] = aToken;
+        address[] memory tokens = new address[](1);
+        tokens[0] = aToken;
 
         uint256 accruedRewards = REWARDS_CONTRACT.getRewardsBalance(tokens, address(this));
         rewards = new TokenAmount[](1);
