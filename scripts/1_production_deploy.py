@@ -42,45 +42,42 @@ def main():
     dev = connect_account()
 
     # Get actors from registry
-    registry = interface.IBadgerRegistry(REGISTRY)
+    # registry = interface.IBadgerRegistry(REGISTRY)
 
-    strategist = registry.get("governance")
-    badgerTree = registry.get("badgerTree")
-    guardian = registry.get("guardian")
-    keeper = registry.get("keeper")
-    proxyAdmin = registry.get("proxyAdminTimelock")
+    strategist = dev
+    badgerTree = dev
+    guardian = dev
+    keeper = dev
+    proxyAdmin = "0xDA25ee226E534d868f0Dd8a459536b03fEE9079b"
 
-    name = "FTM STRAT" ## In vaults 1.5 it's the full name
-    symbol = "bFRM-STrat" ## e.g The full symbol (remember to add symbol from want)
+    name = "Badger wBTC TEST SETT RC.2" ## In vaults 1.5 it's the full name
+    symbol = "bWBTC-RC.2" ## e.g The full symbol (remember to add symbol from want)
 
     assert strategist != AddressZero
     assert guardian != AddressZero
     assert keeper != AddressZero
-    assert proxyAdmin != AddressZero
+    assert proxyAdmin != "AddressZero"
     assert name != "Name Prefix Here"
     assert symbol != "bveSymbolHere"
 
     # Deploy Vault
-    vault = deploy_vault(
-        dev.address,  # Deployer will be set as governance for testing stage
-        keeper,
-        guardian,
-        dev.address,
-        badgerTree,
-        proxyAdmin,
-        name,
-        symbol,
-        dev
-    )
+    # vault = deploy_vault(
+    #     dev.address,  # Deployer will be set as governance for testing stage
+    #     keeper,
+    #     guardian,
+    #     dev.address,
+    #     badgerTree,
+    #     proxyAdmin,
+    #     name,
+    #     symbol,
+    #     dev
+    # )
+
+    vault = TheVault.at("0x711555f2B421DA9A86a18Dc163d04699310fE297")
+
 
     # Deploy Strategy
-    strategy = deploy_strategy(
-        vault,
-        proxyAdmin,
-        dev
-    )
-
-    strategy = MyStrategy.at("0x3ff634ce65cDb8CC0D569D6d1697c41aa666cEA9")
+    strategy = MyStrategy.at("0xc2bc53BCD33cF43124715038315e11F2577fbd4E")
 
     dev_setup = vault.setStrategy(strategy, {"from": dev})
     console.print("[green]Strategy was set was deployed at: [/green]", dev_setup)
@@ -140,7 +137,7 @@ def deploy_strategy(
 
     print("Strategy Arguments: ", args)
 
-    strat_logic = MyStrategy.deploy({"from": dev})
+    strat_logic = MyStrategy.at("0x2F054176c888A4469797bE1E389997e6BB040950")
     time.sleep(sleep_between_tx)
 
     strat_proxy = AdminUpgradeabilityProxy.deploy(
